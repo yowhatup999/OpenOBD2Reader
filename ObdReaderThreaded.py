@@ -3,9 +3,10 @@ from datetime import datetime
 import obd
 import subprocess
 import time
+
 from PySide6.QtCore import QObject, Signal, QThread
 
-from Gui.Console.obd_logger import ObdLogger
+from obd_logger import ObdLogger
 
 
 class ObdReaderThreaded(QObject):
