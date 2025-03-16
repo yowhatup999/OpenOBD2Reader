@@ -10,7 +10,7 @@ from gui.obd_ui import create_status_frame, create_buttons_frame, create_log_con
 from gui.obd_styles import STYLE_MAIN
 from gui.obd_animations import *
 
-from obd_worker import ObdWorker
+from obd_manager import ObdManager
 from ObdReaderThreaded import ObdReaderThreaded
 from obd_logger import ObdLogger
 
@@ -28,8 +28,9 @@ class ObdConsole(QWidget):
         self.create_menu()
 
         self.obdReader = ObdReaderThreaded("commands.txt", "commandsImportant.txt", "commandsMIL.txt")
-        self.obdWorker = None
         self.valueLabels = {}
+
+        self.obdManager = ObdManager(self.obdReader)
 
         self.status_frame, self.label_connection, self.label_time = create_status_frame(self)
 
@@ -38,7 +39,7 @@ class ObdConsole(QWidget):
         self.values_layout = QGridLayout(self.values_frame)
         self.values_layout.setSpacing(10)
 
-        self.buttons_frame = create_buttons_frame(self, self.startObdWorker, self.startObdWorker)
+        self.buttons_frame = create_buttons_frame(self, self.obdManager.start_worker, self.obdManager.start_worker)
 
         self.layoutMain.addWidget(self.status_frame, 1)
         self.layoutMain.addWidget(self.values_frame, 6)
@@ -87,24 +88,6 @@ class ObdConsole(QWidget):
         menu_bar.addMenu(log_menu)
         self.layoutMain.setMenuBar(menu_bar)
 
-    def startObdWorker(self, mode="important"):
-        if self.obdWorker:
-            self.obdWorker.stop()
-            self.obdWorker.quit()
-            self.obdWorker.wait(2000)
-
-        self.logger.log_info(f"Starte OBD-Worker im Modus: {mode}")
-
-        self.obdWorker = ObdWorker(self.obdReader, mode, interval=2000)
-        self.obdWorker.start()
-
-        if mode == "dummy":
-            self.label_connection.setText("Verbindung: Dummy")
-            self.logger.log_info("Dummy-Modus gestartet")
-            self.log_message("Dummy-Modus aktiviert. Werte werden simuliert!")
-        else:
-            self.label_connection.setText("Verbindung: Verbinden...")
-
     def updateConnection(self, message):
         """Aktualisiert das Status-Label mit der passenden Farbe."""
         if "Dummy" in message:
@@ -118,7 +101,7 @@ class ObdConsole(QWidget):
             emoji = "🔴"
 
         self.label_connection.setText(f"{emoji} {message}")
-        self.label_connection.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {color};")
+        self.label_connection.setStyleSheet(f"font-size: 16px; font-weight: bold;")
         self.logger.log_info(f"🔄 Verbindungsstatus: {message}")
 
     def updateDisplayedValues(self, message):
@@ -139,7 +122,6 @@ class ObdConsole(QWidget):
             label.setStyleSheet(f"""
                 QLabel#valueLabel {{
                     background: rgba(40, 40, 40, 0.6);
-                    color: {color};
                     border-radius: 10px;
                     padding: 15px;
                     border: 2px solid rgba(138, 43, 226, 0.4);
@@ -210,16 +192,11 @@ class ObdConsole(QWidget):
         self.label_time.setFont(font)
 
     def closeEvent(self, event):
-        if self.obdWorker and self.obdWorker.isRunning():
-            self.obdWorker.stop()
-            self.obdWorker.quit()
-            self.obdWorker.wait(2000)
-
-            self.logger.log_info("OBD-Worker gestoppt")
-            self.logger.log_info("OBD-Worker sicher beendet.")
-
+        """Sicherstellen, dass der Worker gestoppt wird, wenn das Fenster geschlossen wird."""
+        self.obdManager.stop_worker()
         self.logger.log_info("Programm beendet")
         event.accept()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

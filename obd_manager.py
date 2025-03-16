@@ -1,11 +1,15 @@
 import obd
 from obd_logger import ObdLogger
+from obd_worker import ObdWorker
 
 class ObdManager:
-    def __init__(self, port="/dev/ttyUSB0"):
+    def __init__(self, obdReader, port="/dev/ttyUSB0"):
+        """Verwaltet die OBD-Verbindung und den OBD-Worker."""
         self.port = port
         self.connection = None
         self.logger = ObdLogger()
+        self.obdReader = obdReader
+        self.obdWorker = None
 
     def connect(self):
         """Stellt die OBD-Verbindung her."""
@@ -21,22 +25,19 @@ class ObdManager:
             self.logger.log_error(f"Fehler beim Verbinden: {e}")
             return False
 
-    def get_data(self, mode):
-        """Liest OBD-Daten aus."""
-        if not self.connection or not self.connection.is_connected():
-            return {}
+    def start_worker(self, mode="important"):
+        """Startet den OBD-Worker im angegebenen Modus."""
+        self.stop_worker()  # Falls bereits ein Worker läuft, erst stoppen
 
-        commands = {
-            "important": [obd.commands.RPM, obd.commands.SPEED],
-            "dummy": ["Dummy-Werte"]
-        }
+        self.logger.log_info(f"Starte OBD-Worker im Modus: {mode}")
 
-        data = {}
-        for cmd in commands.get(mode, []):
-            response = self.connection.query(cmd)
-            if response and response.value:
-                data[cmd.name] = response.value
-            else:
-                data[cmd.name] = "N/A"
+        self.obdWorker = ObdWorker(self.obdReader, mode, interval=2000)
+        self.obdWorker.start()
 
-        return data
+    def stop_worker(self):
+        """Stoppt den OBD-Worker, falls er läuft."""
+        if self.obdWorker and self.obdWorker.isRunning():
+            self.obdWorker.stop()
+            self.obdWorker.quit()
+            self.obdWorker.wait(2000)
+            self.logger.log_info("OBD-Worker gestoppt")
