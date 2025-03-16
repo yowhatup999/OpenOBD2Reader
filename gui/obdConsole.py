@@ -31,18 +31,18 @@ class ObdConsole(QWidget):
         self.obdWorker = None
         self.valueLabels = {}
 
-        self.statusFrame, self.labelConnection, self.labelTime = create_status_frame(self)
+        self.status_frame, self.label_connection, self.label_time = create_status_frame(self)
 
-        self.valuesFrame = QWidget(self)
-        self.valuesFrame.setObjectName("frameValues")  # <- Wichtig für CSS
-        self.valuesLayout = QGridLayout(self.valuesFrame)
-        self.valuesLayout.setSpacing(10)
+        self.values_frame = QWidget(self)
+        self.values_frame.setObjectName("frameValues")
+        self.values_layout = QGridLayout(self.values_frame)
+        self.values_layout.setSpacing(10)
 
-        self.buttonsFrame = create_buttons_frame(self, self.startObdWorker, self.startObdWorker)
+        self.buttons_frame = create_buttons_frame(self, self.startObdWorker, self.startObdWorker)
 
-        self.layoutMain.addWidget(self.statusFrame, 1)
-        self.layoutMain.addWidget(self.valuesFrame, 6)
-        self.layoutMain.addWidget(self.buttonsFrame, 1)
+        self.layoutMain.addWidget(self.status_frame, 1)
+        self.layoutMain.addWidget(self.values_frame, 6)
+        self.layoutMain.addWidget(self.buttons_frame, 1)
 
         self.obdWorker = None
         self.valueLabels = {}
@@ -59,11 +59,11 @@ class ObdConsole(QWidget):
 
         self.logger = ObdLogger(log_console=self.logFrame.log_console)
 
-        self.logger.log_info("🚀 Programm gestartet")  # Start-Log
+        self.logger.log_info("Programm gestartet")  # Start-Log
 
-        self.timerTimeUpdate = QTimer()
-        self.timerTimeUpdate.timeout.connect(self.updateTime)
-        self.timerTimeUpdate.start(1000)
+        self.timer_time_update = QTimer()
+        self.timer_time_update.timeout.connect(self.updateTime)
+        self.timer_time_update.start(1000)
 
     def create_menu(self):
         """Erstellt die Menüleiste mit Optionen für die Ansicht und das Speichern der Logs."""
@@ -93,17 +93,17 @@ class ObdConsole(QWidget):
             self.obdWorker.quit()
             self.obdWorker.wait(2000)
 
-        self.logger.log_info(f"🔄 Starte OBD-Worker im Modus: {mode}")
+        self.logger.log_info(f"Starte OBD-Worker im Modus: {mode}")
 
         self.obdWorker = ObdWorker(self.obdReader, mode, interval=2000)
         self.obdWorker.start()
 
         if mode == "dummy":
-            self.labelConnection.setText("🟡 Verbindung: Dummy")
-            self.logger.log_info("🟡 Dummy-Modus gestartet")
-            self.log_message("🟡 Dummy-Modus aktiviert. Werte werden simuliert!")
+            self.label_connection.setText("Verbindung: Dummy")
+            self.logger.log_info("Dummy-Modus gestartet")
+            self.log_message("Dummy-Modus aktiviert. Werte werden simuliert!")
         else:
-            self.labelConnection.setText("🔴 Verbindung: Verbinden...")
+            self.label_connection.setText("Verbindung: Verbinden...")
 
     def updateConnection(self, message):
         """Aktualisiert das Status-Label mit der passenden Farbe."""
@@ -117,8 +117,8 @@ class ObdConsole(QWidget):
             color = "red"
             emoji = "🔴"
 
-        self.labelConnection.setText(f"{emoji} {message}")
-        self.labelConnection.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {color};")
+        self.label_connection.setText(f"{emoji} {message}")
+        self.label_connection.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {color};")
         self.logger.log_info(f"🔄 Verbindungsstatus: {message}")
 
     def updateDisplayedValues(self, message):
@@ -151,7 +151,7 @@ class ObdConsole(QWidget):
             position = len(self.valueLabels)
             row = position // 4
             col = position % 4
-            self.valuesLayout.addWidget(label, row, col)
+            self.values_layout.addWidget(label, row, col)
             self.valueLabels[key] = label
 
         self.valueLabels[key].setText(display_text)
@@ -183,13 +183,13 @@ class ObdConsole(QWidget):
     def save_log_to_file(self):
         """Speichert den Log-Text in eine Datei mit Zeitstempel."""
         if not hasattr(self.logFrame, "log_console"):
-            self.log_message("⚠️ Log-Konsole nicht gefunden!")
+            self.log_message("Log-Konsole nicht gefunden!")
             return
 
         log_text = self.logFrame.log_console.toPlainText()
 
         if not log_text.strip():
-            self.log_message("⚠️ Kein Log zum Speichern vorhanden!")
+            self.log_message("Kein Log zum Speichern vorhanden!")
             return
 
         # Log-Dateiname mit Datum & Uhrzeit
@@ -202,12 +202,12 @@ class ObdConsole(QWidget):
             log_file.write(log_text)
 
         # Bestätigung in der GUI anzeigen
-        self.log_message(f"✅ Log gespeichert: {log_filename}")
+        self.log_message(f"Log gespeichert: {log_filename}")
 
     def updateTime(self):
-        self.labelTime.setText(f"⏱ {datetime.now().strftime('%H:%M:%S')} UHR")
-        font = self.labelTime.font()
-        self.labelTime.setFont(font)
+        self.label_time.setText(f"⏱ {datetime.now().strftime('%H:%M:%S')} UHR")
+        font = self.label_time.font()
+        self.label_time.setFont(font)
 
     def closeEvent(self, event):
         if self.obdWorker and self.obdWorker.isRunning():
@@ -215,10 +215,10 @@ class ObdConsole(QWidget):
             self.obdWorker.quit()
             self.obdWorker.wait(2000)
 
-            self.logger.log_info("🛑 OBD-Worker gestoppt")
+            self.logger.log_info("OBD-Worker gestoppt")
             self.logger.log_info("OBD-Worker sicher beendet.")
 
-        self.logger.log_info("🛑 Programm beendet")
+        self.logger.log_info("Programm beendet")
         event.accept()
 
 if __name__ == "__main__":

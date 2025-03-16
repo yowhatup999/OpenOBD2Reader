@@ -3,11 +3,12 @@ from datetime import datetime
 import obd
 import subprocess
 import time
+import platform
 
-from PySide6.QtCore import QObject, Signal, QThread
+from PySide6.QtCore import QObject, Signal, QThread, QTimer
 
 from obd_logger import ObdLogger
-
+from obd_worker import ObdWorker
 
 class ObdReaderThreaded(QObject):
     connectionEstablished = Signal(str)
@@ -17,26 +18,27 @@ class ObdReaderThreaded(QObject):
     dtcCleared = Signal(str)
     requestBluetoothReset = Signal()
 
-    def __init__(self, commandsFile, commandImpFile, commandsMILFile, port="/dev/tty.Android-Vlink"):
+    def __init__(self, commands_file, commands_imp_file, commands_mil_file, port="/dev/tty.Android-Vlink"):
         super().__init__()
         self.port = port
 
         self.logger = ObdLogger()
-        self.logger.log_info("📡 OBD-Reader initialisiert")
+        self.logger.log_info("OBD-Reader wurde gestartet")
 
-        self.commandsAll = self.loadCommands(commandsFile)
-        self.commandsImportant = self.loadCommands(commandImpFile)
-        self.commandsMIL = self.loadCommands(commandsMILFile)
+        self.commands_all = self.load_commands(commands_file)
+        self.commands_important = self.load_commands(commands_imp_file)
+        self.commands_mil = self.load_commands(commands_mil_file)
         self.connection = None
         self.ble_serial = None
 
     def startConnection(self):
-        """Startet die Verbindung zum OBD-II Adapter mit BLE-Serial und mehreren Versuchen."""
+        """Verbindet mit dem OBD-II Adapter, falls möglich."""
         self.retry_count = 0
         self.max_retries = 3
         self.connection = None
 
-        self.errorOccurred.emit(f"🔄 Verbindungsversuch {self.retry_count + 1}/{self.max_retries}...")
+        if self.retry_count + 1 == self.max_retries:
+            self.errorOccurred.emit(f"Letzter Verbindungsversuch {self.retry_count + 1}/{self.max_retries}...")
 
         # BLE-Serial starten, falls nötig
         self.startBleSerial()
@@ -47,11 +49,11 @@ class ObdReaderThreaded(QObject):
     def retryConnection(self):
         """Führt einen erneuten Verbindungsversuch aus."""
         if self.retry_count >= self.max_retries:
-            self.errorOccurred.emit("❌ Keine OBD2-Verbindung nach mehreren Versuchen.")
+            self.errorOccurred.emit("Keine OBD2-Verbindung nach mehreren Versuchen.")
             self.askForBluetoothReset()  # Falls keine Verbindung → Bluetooth-Reset anbieten
             return
 
-        self.errorOccurred.emit(f"🔄 Verbindungsversuch {self.retry_count + 1}/{self.max_retries}...")
+        self.errorOccurred.emit(f"Verbindungsversuch {self.retry_count + 1}/{self.max_retries}...")
 
         self.connection = obd.OBD(portstr=self.port, baudrate=9600, timeout=5)
 
@@ -59,7 +61,7 @@ class ObdReaderThreaded(QObject):
             self.connectionEstablished.emit("OBD2-Adapter erfolgreich verbunden")
         else:
             self.errorOccurred.emit(
-                f"⚠️ OBD2-Verbindung fehlgeschlagen (Versuch {self.retry_count + 1}/{self.max_retries})")
+                f"OBD2-Verbindung fehlgeschlagen (Versuch {self.retry_count + 1}/{self.max_retries})")
             self.retry_count += 1
             QTimer.singleShot(5000, self.retryConnection)
 
@@ -71,41 +73,44 @@ class ObdReaderThreaded(QObject):
             self.errorOccurred.emit("BLE-Serial gestartet. Warte 5 Sekunden auf die Verbindung...")
             QTimer.singleShot(5000, self.checkObdConnection)  # Verbindung nach 5 Sekunden prüfen
         except FileNotFoundError:
-            self.errorOccurred.emit("❌ BLE-Serial nicht gefunden. Starte Dummy-Modus.")
+            self.errorOccurred.emit("BLE-Serial nicht gefunden. Starte Dummy-Modus.")
             self.startDummyConnection()
 
     def checkObdConnection(self):
         """Prüft, ob die OBD-Verbindung nach BLE-Serial-Start erfolgreich ist."""
         if self.connection and self.connection.is_connected():
-            self.connectionEstablished.emit("✅ OBD2-Verbindung erfolgreich über BLE-Serial!")
+            self.connectionEstablished.emit("OBD2-Verbindung erfolgreich über BLE-Serial!")
         else:
             self.retryConnection()
 
     def askForBluetoothReset(self):
         """Sendet ein Signal an die GUI, um nach einem Bluetooth-Reset zu fragen."""
-        self.errorOccurred.emit("⚠️ Keine OBD2-Verbindung. Soll Bluetooth neu gestartet werden?")
+        self.errorOccurred.emit("Keine OBD2-Verbindung. Soll Bluetooth neu gestartet werden?")
         self.requestBluetoothReset.emit()
 
-    def restartBluetooth(self):
+    def restart_bluetooth(self):
         """Startet Bluetooth neu und versucht danach erneut eine Verbindung."""
         try:
-            self.errorOccurred.emit("🔄 Bluetooth wird neu gestartet...")
-            subprocess.run(["sudo", "pkill", "bluetoothd"], check=True)
-            subprocess.run(["sudo", "launchctl", "stop", "com.apple.bluetoothd"], check=True)
-            subprocess.run(["sudo", "launchctl", "start", "com.apple.bluetoothd"], check=True)
-            self.errorOccurred.emit("✅ Bluetooth erfolgreich neu gestartet.")
+            self.error_occurred.emit("Bluetooth wird neu gestartet...")
 
-            # Nach 5 Sekunden erneut Verbindung versuchen
-            QTimer.singleShot(5000, self.startConnection)
+            if platform.system() == "Linux":
+                subprocess.run(["sudo", "systemctl", "restart", "bluetooth"], check=True)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.run(["sudo", "pkill", "bluetoothd"], check=True)
+                subprocess.run(["sudo", "launchctl", "stop", "com.apple.bluetoothd"], check=True)
+                subprocess.run(["sudo", "launchctl", "start", "com.apple.bluetoothd"], check=True)
+
+            self.error_occurred.emit("Bluetooth erfolgreich neu gestartet.")
+            QTimer.singleShot(5000, self.start_connection)
 
         except Exception as e:
-            self.errorOccurred.emit(f"❌ Fehler beim Neustart von Bluetooth: {e}")
+            self.error_occurred.emit(f"Fehler beim Neustart von Bluetooth: {e}")
 
     def startDummyConnection(self):
         """Simuliert eine OBD-Verbindung und liefert zufällige Werte."""
-        self.logger.log_info("[🟡 Dummy] Dummy-Modus gestartet")
+        self.logger.log_info("Dummy-Modus wurde aktiviert")
         self.connection = None
-        self.connectionEstablished.emit("🟡 Dummy-Modus aktiv")
+        self.connectionEstablished.emit("Dummy-Modus aktiv")
 
         # Simulierte OBD-Daten
         dummyData = {
@@ -135,10 +140,10 @@ class ObdReaderThreaded(QObject):
             self.dtcReceived.emit(dtc_message)
             self.logger.log_warning(dtc_message)
         else:
-            self.dtcReceived.emit("[🟡 Dummy] ✅ Keine Fehlercodes gefunden.")
-            self.logger.log_info("[🟡 Dummy] ✅ Keine Fehlercodes gefunden.")
+            self.dtcReceived.emit("[🟡 Dummy] Keine Fehlercodes gefunden.")
+            self.logger.log_info("[🟡 Dummy] Keine Fehlercodes gefunden.")
 
-    def loadCommands(self, filename):
+    def load_commands(self, filename):
         """Lädt OBD-Befehle aus einer Datei."""
         commands = []
         try:
@@ -198,15 +203,15 @@ class ObdReaderThreaded(QObject):
 
     def readAll(self):
         """Liest alle verfügbaren OBD-Werte aus."""
-        self.readCommands(self.commandsAll)
+        self.readCommands(self.commands_all)
 
     def readImportant(self):
         """Liest nur die wichtigsten OBD-Werte aus."""
-        self.readCommands(self.commandsImportant)
+        self.readCommands(self.commands_important)
 
     def readMIL(self):
         """Liest nur die Service Wichtigen OBD-Werte aus."""
-        self.readCommands(self.commandsMIL)
+        self.readCommands(self.commands_mil)
 
     def calculateFuelConsumption(self, maf, speed):
         """ Berechnet den Momentanverbrauch in L/100 km mit MAF """
@@ -250,59 +255,16 @@ class ObdReaderThreaded(QObject):
 
         if self.connection:
             self.connection.close()
-            self.errorOccurred.emit("✅ OBD-Verbindung geschlossen.")
+            self.errorOccurred.emit("OBD-Verbindung geschlossen.")
 
         if self.ble_serial:
             try:
                 subprocess.run(["pkill", "-f", "ble-serial"])
-                self.errorOccurred.emit("✅ BLE-Serial-Prozess beendet.")
+                self.errorOccurred.emit("BLE-Serial-Prozess beendet.")
             except Exception as e:
-                self.errorOccurred.emit(f"❌ Fehler beim Beenden von BLE-Serial: {e}")
+                self.errorOccurred.emit(f"Fehler beim Beenden von BLE-Serial: {e}")
 
         self.connectionEstablished.emit("Verbindung beendet.")
-
-
-from PySide6.QtCore import QThread, QTimer
-
-
-from PySide6.QtCore import QThread, QTimer
-
-class ObdWorker(QThread):
-    """Hintergrund-Thread für die kontinuierliche OBD-Abfrage."""
-
-    def __init__(self, obdReader, mode="important", interval=2000):
-        """
-        :param obdReader: Instanz von ObdReader
-        :param mode: "all", "important", "dummy", etc.
-        :param interval: Intervall für Messungen in Millisekunden (default: 2000ms)
-        """
-        super().__init__()
-        self.obdReader = obdReader
-        self.mode = mode
-        self.interval = interval  # Zeitintervall für Abfragen
-        self.timer = None  # Timer erst im run() initialisieren
-
-    def run(self):
-        """Startet das periodische Auslesen der OBD-Daten."""
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.readData)
-        self.timer.start(self.interval)
-
-        # Wichtig: Qt-Event-Loop aktiv halten
-        self.exec()
-
-    def readData(self):
-        """Liest Daten basierend auf dem Modus regelmäßig."""
-        if self.mode == "all":
-            self.obdReader.readAll()
-        elif self.mode == "important":
-            self.obdReader.readImportant()
-        elif self.mode == "mil":
-            self.obdReader.readMIL()
-        elif self.mode == "dtc":
-            self.obdReader.checkDTCs()
-        elif self.mode == "dummy":
-            self.obdReader.startDummyConnection()  # ✅ Dummy-Werte regelmäßig senden
 
 
 

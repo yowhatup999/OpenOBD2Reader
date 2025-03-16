@@ -33,7 +33,7 @@ def create_values_frame(parent):
 
     effect = create_glow_effect(frame)
     animate_frame_color(effect)
-    animate_background_color(frame)  # Hier wird der sanfte Farbwechsel gestartet
+    animate_background_color(frame)  # Hier wird der Farbwechsel gestartet
 
     return frame, layout
 
@@ -72,13 +72,12 @@ def create_log_console(parent):
     layout = QVBoxLayout(frame)
     layout.setContentsMargins(5, 5, 5, 5)
 
-    # Titel-Leiste mit „Log“ Label und Minimize-Button
     title_bar = QHBoxLayout()
     title_label = QLabel("Log", parent)
     title_label.setStyleSheet("font-size: 14px; font-weight: bold; color: white;")
 
-    btn_toggle = QPushButton("━", parent)  # Windows-Style Minimize Symbol
-    btn_toggle.setFixedSize(25, 25)  # Knopf hat eine Höhe von 25px
+    btn_toggle = QPushButton("━", parent)
+    btn_toggle.setFixedSize(25, 25)
     btn_toggle.setStyleSheet("""
         QPushButton {
             background-color: rgba(138, 43, 226, 0.3);
@@ -122,11 +121,11 @@ def create_log_console(parent):
     frame.setMinimumHeight(30)  # Mindestens 30px, damit der Button passt!
 
     def toggle_log():
-        """Blendet die Konsole ein oder aus."""
+        """Minimiert oder maximiert das Log-Fenster in der UI."""
         if log_console.isVisible():
             log_console.setVisible(False)
             animation.setDirection(QPropertyAnimation.Forward)
-            btn_toggle.setText("━")  # Windows Minimize-Button
+            btn_toggle.setText("━")
         else:
             log_console.setVisible(True)
             animation.setDirection(QPropertyAnimation.Backward)
@@ -135,5 +134,5 @@ def create_log_console(parent):
 
     btn_toggle.clicked.connect(toggle_log)
 
-    frame.log_console = log_console  # Speichern, damit wir von außen darauf zugreifen können
+    frame.log_console = log_console
     return frame

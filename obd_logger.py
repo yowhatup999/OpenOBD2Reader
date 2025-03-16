@@ -6,13 +6,12 @@ class ObdLogger:
         self.log_folder = "logs"
         os.makedirs(self.log_folder, exist_ok=True)
         self.log_file = os.path.join(self.log_folder, "obd_log.txt")
-        self.log_console = log_console  # GUI-Log übergeben
+        self.log_console = log_console
 
     def log(self, message, level="INFO"):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_message = f"[{timestamp}] [{level}] {message}\n"
 
-        # Falls eine GUI-Log-Konsole existiert, dort anzeigen
         if self.log_console:
             self.log_console.appendPlainText(log_message.strip())
 
@@ -28,5 +27,5 @@ class ObdLogger:
     def log_error(self, message):
         self.log(message, "ERROR")
 
-    def log_success(self, message):
-        self.log(message, "SUCCESS")
+    def log_ok(self, message):
+        self.log(message, "OK")

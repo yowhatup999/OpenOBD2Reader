@@ -1,5 +1,5 @@
 import obd
-from Gui.Console.obd_logger import ObdLogger
+from obd_logger import ObdLogger
 
 class ObdManager:
     def __init__(self, port="/dev/ttyUSB0"):
@@ -8,31 +8,35 @@ class ObdManager:
         self.logger = ObdLogger()
 
     def connect(self):
-        """Verbindet sich mit dem OBD-Adapter"""
+        """Stellt die OBD-Verbindung her."""
         try:
             self.connection = obd.OBD(self.port)
             if self.connection.is_connected():
-                self.logger.log_success("✅ OBD2-Adapter erfolgreich verbunden!")
+                self.logger.log_ok("OBD2-Adapter erfolgreich verbunden!")
                 return True
             else:
-                self.logger.log_error("❌ Verbindung zum OBD2-Adapter fehlgeschlagen.")
+                self.logger.log_error("Verbindung zum OBD2-Adapter fehlgeschlagen.")
                 return False
         except Exception as e:
-            self.logger.log_error(f"❌ Fehler beim Verbinden: {e}")
+            self.logger.log_error(f"Fehler beim Verbinden: {e}")
             return False
 
     def get_data(self, mode):
-        """Fragt OBD-Daten ab"""
+        """Liest OBD-Daten aus."""
         if not self.connection or not self.connection.is_connected():
             return {}
 
         commands = {
             "important": [obd.commands.RPM, obd.commands.SPEED],
-            "dummy": []
+            "dummy": ["Dummy-Werte"]
         }
 
         data = {}
         for cmd in commands.get(mode, []):
             response = self.connection.query(cmd)
-            data[cmd.name] = response.value if response.value else "N/A"
+            if response and response.value:
+                data[cmd.name] = response.value
+            else:
+                data[cmd.name] = "N/A"
+
         return data
