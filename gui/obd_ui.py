@@ -3,10 +3,9 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QPropertyAnimation
 
-from gui.obd_animations import create_glow_effect, animate_frame_color, animate_background_color
-
 def create_status_frame(parent):
     frame = QFrame(parent)
+    frame.setObjectName("frameStatus")  # Objektname setzen
     layout = QHBoxLayout(frame)
     layout.setContentsMargins(5, 5, 5, 5)
     layout.setSpacing(20)
@@ -22,23 +21,18 @@ def create_status_frame(parent):
     layout.addWidget(label_connection, 1)
     layout.addWidget(label_time, 1)
 
-    effect = create_glow_effect(frame)
-    animate_frame_color(effect)
-
     return frame, label_connection, label_time
 
 def create_values_frame(parent):
     frame = QFrame(parent)
+    frame.setObjectName("frameValues")  # Objektname setzen
     layout = QGridLayout(frame)
-
-    effect = create_glow_effect(frame)
-    animate_frame_color(effect)
-    animate_background_color(frame)  # Hier wird der Farbwechsel gestartet
 
     return frame, layout
 
 def create_buttons_frame(parent, connect_callback, dummy_callback):
     frame = QFrame(parent)
+    frame.setObjectName("frameButtons")  # Objektname setzen
     layout = QHBoxLayout(frame)
     layout.setSpacing(10)
 
@@ -53,9 +47,6 @@ def create_buttons_frame(parent, connect_callback, dummy_callback):
     layout.addWidget(btn_connect)
     layout.addWidget(btn_dummy)
 
-    effect = create_glow_effect(frame)
-    animate_frame_color(effect)
-
     return frame
 
 def create_log_console(parent):
@@ -65,7 +56,7 @@ def create_log_console(parent):
     frame.setStyleSheet("""
         QFrame#logFrame {
             border: 1px solid rgba(138, 43, 226, 0.3);
-            border-radius: 5px;
+            border-radius: 12px;
         }
     """)
 
@@ -101,14 +92,14 @@ def create_log_console(parent):
         QPlainTextEdit {
             background-color: rgb(30, 30, 30);
             color: white;
-            font-family: monospace;
+            font-family: Consolas, Courier, monospace;
             font-size: 14px;
             border-radius: 5px;
             padding: 5px;
             border: 1px solid rgba(138, 43, 226, 0.3);
         }
     """)
-    log_console.setMaximumHeight(120)
+    log_console.setMaximumHeight(200)  # Mehr Platz für Logs
 
     layout.addLayout(title_bar)
     layout.addWidget(log_console)
@@ -116,9 +107,9 @@ def create_log_console(parent):
     # Animation für Einklappen
     animation = QPropertyAnimation(frame, b"maximumHeight")
     animation.setDuration(200)
-    animation.setStartValue(130)  # Volle Höhe mit Log
-    animation.setEndValue(40)  # Min-Höhe = Höhe des Buttons
-    frame.setMinimumHeight(30)  # Mindestens 30px, damit der Button passt!
+    animation.setStartValue(200)  # Volle Höhe mit Log
+    animation.setEndValue(55)  # Min-Höhe des eingeklappten Fensters
+    frame.setMinimumHeight(55)  # Mindestens 80px, damit der Button passt!
 
     def toggle_log():
         """Minimiert oder maximiert das Log-Fenster in der UI."""
@@ -134,5 +125,5 @@ def create_log_console(parent):
 
     btn_toggle.clicked.connect(toggle_log)
 
-    frame.log_console = log_console
+    frame.log_console = log_console  # WICHTIG: Damit der Zugriff in obdConsole.py funktioniert
     return frame

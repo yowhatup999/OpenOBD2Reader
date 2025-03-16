@@ -7,18 +7,11 @@ QWidget {
     font-size: 14px;
 }
 
-/* Status-Leiste oben */
-#frameStatus {
-    background-color: rgba(40, 40, 40, 0.6);
-    border-radius: 15px;
-    padding: 8px;
-}
-
-/* Hauptanzeige (Mitte) - Wertebereich mit Rahmen */
-#frameValues {
+/* Hauptanzeige - Wertebereich mit Rahmen */
+#frameStatus, #frameButtons, #logFrame, #frameValues {
     background-color: rgba(30, 30, 30, 0.5);
     border: 2px solid rgba(138, 43, 226, 0.4);
-    border-radius: 12px;
+    border-radius: 12px;  
     padding: 10px;
 }
 

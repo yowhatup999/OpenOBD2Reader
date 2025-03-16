@@ -33,6 +33,7 @@ class ObdConsole(QWidget):
         self.obdManager = ObdManager(self.obdReader)
 
         self.status_frame, self.label_connection, self.label_time = create_status_frame(self)
+        self.status_frame.setObjectName("frameStatus")
 
         self.values_frame = QWidget(self)
         self.values_frame.setObjectName("frameValues")
@@ -40,6 +41,7 @@ class ObdConsole(QWidget):
         self.values_layout.setSpacing(10)
 
         self.buttons_frame = create_buttons_frame(self, self.obdManager.start_worker, self.obdManager.start_worker)
+        self.buttons_frame.setObjectName("frameButtons")
 
         self.layoutMain.addWidget(self.status_frame, 1)
         self.layoutMain.addWidget(self.values_frame, 6)
@@ -56,6 +58,7 @@ class ObdConsole(QWidget):
 
         # LOG CONSOLE widget / label etc
         self.logFrame = create_log_console(self)
+        self.logFrame.setObjectName("logFrame")
         self.layoutMain.addWidget(self.logFrame, 2)
 
         self.logger = ObdLogger(log_console=self.logFrame.log_console)
@@ -102,7 +105,7 @@ class ObdConsole(QWidget):
 
         self.label_connection.setText(f"{emoji} {message}")
         self.label_connection.setStyleSheet(f"font-size: 16px; font-weight: bold;")
-        self.logger.log_info(f"🔄 Verbindungsstatus: {message}")
+        self.logger.log_info(f"Verbindungsstatus: {message}")
 
     def updateDisplayedValues(self, message):
         """Zeigt empfangene OBD-Werte in der GUI an."""
@@ -122,7 +125,7 @@ class ObdConsole(QWidget):
             label.setStyleSheet(f"""
                 QLabel#valueLabel {{
                     background: rgba(40, 40, 40, 0.6);
-                    border-radius: 10px;
+                    border-radius: 12px;
                     padding: 15px;
                     border: 2px solid rgba(138, 43, 226, 0.4);
                     font-size: 16px;
