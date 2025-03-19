@@ -1,4 +1,4 @@
-from PySide6.QtCore import QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
 
@@ -32,4 +32,36 @@ def animate_glow_color(effect):
     animation.setKeyValueAt(1.0, COLOR_PRIMARY)
 
     animation.start()
+    return animation
+
+def animate_hue_shift(widget):
+    """Erstellt eine sanfte Hintergrund-Farbanimation im HUE-Farbspektrum"""
+    animation = QPropertyAnimation(widget, b"styleSheet")
+    animation.setDuration(5000)  # Dauer eines Farbwechsels
+    animation.setLoopCount(-1)  # Endlos wiederholen
+    animation.setEasingCurve(QEasingCurve.InOutQuad)
+
+    colors = [
+        "background-color: rgb(255, 0, 0);",   # Rot
+        "background-color: rgb(255, 165, 0);", # Orange
+        "background-color: rgb(255, 255, 0);", # Gelb
+        "background-color: rgb(0, 255, 0);",   # Grün
+        "background-color: rgb(0, 255, 255);", # Türkis
+        "background-color: rgb(0, 0, 255);",   # Blau
+        "background-color: rgb(128, 0, 128);"  # Lila
+    ]
+
+    for i, color in enumerate(colors):
+        animation.setKeyValueAt(i / (len(colors) - 1), color)
+
+    animation.start()
+
+    # Timer erstellen, um das StyleSheet zu aktualisieren
+    def update_style():
+        widget.setStyleSheet(colors[0])  # Setzt den ersten Farbwert als Startfarbe
+
+    timer = QTimer()
+    timer.timeout.connect(update_style)
+    timer.start(5000)  # Aktualisiert alle 5 Sekunden
+
     return animation

@@ -15,6 +15,11 @@ QWidget {
     padding: 10px;
 }
 
+#frameValues {
+    border-radius: 12px;
+    padding: 10px;
+}
+
 /* Button-Leiste (Unten) */
 #frameButtons {
     background-color: rgba(30, 30, 30, 0.6);

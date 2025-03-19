@@ -3,6 +3,9 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QPropertyAnimation
 
+from gui.obd_animations import animate_hue_shift
+
+
 def create_status_frame(parent):
     frame = QFrame(parent)
     frame.setObjectName("frameStatus")  # Objektname setzen
@@ -25,8 +28,11 @@ def create_status_frame(parent):
 
 def create_values_frame(parent):
     frame = QFrame(parent)
-    frame.setObjectName("frameValues")  # Objektname setzen
+    frame.setObjectName("frameValues")
     layout = QGridLayout(frame)
+
+    # Starte den Farbwechsel
+    animate_hue_shift(frame)
 
     return frame, layout
 

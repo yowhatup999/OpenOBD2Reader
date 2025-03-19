@@ -39,6 +39,7 @@ class ObdConsole(QWidget):
         self.values_frame.setObjectName("frameValues")
         self.values_layout = QGridLayout(self.values_frame)
         self.values_layout.setSpacing(10)
+        animate_hue_shift(self.values_frame)
 
         self.buttons_frame = create_buttons_frame(self, self.obdManager.start_worker, self.obdManager.start_worker)
         self.buttons_frame.setObjectName("frameButtons")
