@@ -2,13 +2,15 @@ import os
 import sys
 from datetime import datetime
 
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QIcon, QPixmap
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QGridLayout, QMenuBar, QMenu
 from PySide6.QtCore import QTimer, Qt
 
 from gui.obd_ui import create_status_frame, create_buttons_frame, create_log_console
 from gui.obd_styles import STYLE_MAIN
 from gui.obd_animations import *
+
+import icons.resources_rc
 
 from obd_manager import ObdManager
 from ObdReaderThreaded import ObdReaderThreaded
@@ -21,6 +23,9 @@ class ObdConsole(QWidget):
         self.setWindowTitle("OBD2 Terminal")
         self.resize(1280, 800)
         self.setStyleSheet(STYLE_MAIN)
+
+        # Setze das Fenster-Icon
+        app.setWindowIcon(QIcon(":/icons/mainIcon.png"))
 
         self.layoutMain = QVBoxLayout(self)
         self.layoutMain.setSpacing(5)

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="icons">
+        <file>mainIcon.png</file>
+        <file>OBD2Logo.png</file>
+    </qresource>
+</RCC>
