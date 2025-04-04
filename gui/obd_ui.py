@@ -4,10 +4,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QPropertyAnimation
 
 from gui.obd_animations import animate_hue_shift
+from gui.GlowingAnimatedFrame import GlowingAnimatedFrame
+from gui.GlowingFrame import GlowingFrame
 
 
 def create_status_frame(parent):
-    frame = QFrame(parent)
+    frame = GlowingAnimatedFrame(parent)
     frame.setObjectName("frameStatus")  # Objektname setzen
     layout = QHBoxLayout(frame)
     layout.setContentsMargins(5, 5, 5, 5)
@@ -37,7 +39,7 @@ def create_values_frame(parent):
     return frame, layout
 
 def create_buttons_frame(parent, connect_callback, dummy_callback):
-    frame = QFrame(parent)
+    frame = GlowingAnimatedFrame(parent)
     frame.setObjectName("frameButtons")  # Objektname setzen
     layout = QHBoxLayout(frame)
     layout.setSpacing(10)

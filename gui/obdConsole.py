@@ -6,6 +6,8 @@ from PySide6.QtGui import QAction, QIcon, QPixmap
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QGridLayout, QMenuBar, QMenu
 from PySide6.QtCore import QTimer, Qt
 
+from gui.GlowingAnimatedFrame import GlowingAnimatedFrame
+from gui.GlowingFrame import GlowingFrame
 from gui.obd_ui import create_status_frame, create_buttons_frame, create_log_console
 from gui.obd_styles import STYLE_MAIN
 from gui.obd_animations import *
@@ -40,7 +42,7 @@ class ObdConsole(QWidget):
         self.status_frame, self.label_connection, self.label_time = create_status_frame(self)
         self.status_frame.setObjectName("frameStatus")
 
-        self.values_frame = QWidget(self)
+        self.values_frame = GlowingAnimatedFrame(self)
         self.values_frame.setObjectName("frameValues")
         self.values_layout = QGridLayout(self.values_frame)
         self.values_layout.setSpacing(10)
