@@ -99,6 +99,25 @@ class ObdConsole(QWidget):
         menu_bar.addMenu(log_menu)
         self.layoutMain.setMenuBar(menu_bar)
 
+        # Low Power Mode Menü
+        view_menu.addSeparator()
+        self.menu_low_power = QAction("Low Power Mode", self, checkable=True)
+        self.menu_low_power.setChecked(False)
+        self.menu_low_power.triggered.connect(self.toggle_low_power_mode)
+        view_menu.addAction(self.menu_low_power)
+
+    def toggle_low_power_mode(self):
+        low_power = self.menu_low_power.isChecked()
+
+        if hasattr(self, "values_frame"):
+            self.values_frame.setLowPowerMode(low_power)
+        if hasattr(self, "status_frame"):
+            self.status_frame.setLowPowerMode(low_power)
+        if hasattr(self, "buttons_frame"):
+            self.buttons_frame.setLowPowerMode(low_power)
+
+        self.logger.log_info("Low Power Mode aktiviert" if low_power else "Low Power Mode deaktiviert")
+
     def updateConnection(self, message):
         """Aktualisiert das Status-Label mit der passenden Farbe."""
         if "Dummy" in message:

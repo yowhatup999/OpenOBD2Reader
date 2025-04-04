@@ -120,8 +120,6 @@ class ObdReaderThreaded(QObject):
             "COOLANT_TEMP": f"{random.randint(70, 110)} °C",
             "FUEL_LEVEL": f"{random.uniform(10.0, 90.0):.1f} %",
             "MAF": f"{random.uniform(2.0, 20.0):.2f} g/s",
-            "Yo": f"{random.uniform(0.0, 999):.2f} %",
-            "what": f"{random.uniform(0.0, 999):.2f} %",
         }
 
         for cmd, value in dummyData.items():
