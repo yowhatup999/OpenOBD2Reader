@@ -7,6 +7,26 @@ from gui.obd_animations import animate_hue_shift
 from gui.GlowingAnimatedFrame import GlowingAnimatedFrame
 from gui.GlowingFrame import GlowingFrame
 
+# Button Style
+BUTTON_STYLE = """
+QPushButton {
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: white;
+    font-size: 14px;
+}
+QPushButton:hover {
+    background-color: qlineargradient(
+        spread:pad, x1:0, y1:0, x2:1, y2:0,
+        stop:0 rgba(138, 43, 226, 0.6),
+        stop:0.5 rgba(255, 20, 147, 0.6),
+        stop:1 rgba(30, 144, 255, 0.6)
+    );
+    border: 2px solid rgba(255, 20, 147, 0.7);
+}
+"""
 
 def create_status_frame(parent):
     frame = GlowingAnimatedFrame(parent)
@@ -44,12 +64,12 @@ def create_buttons_frame(parent, connect_callback, dummy_callback):
     layout = QHBoxLayout(frame)
     layout.setSpacing(10)
 
-    btn_connect = QPushButton("🔌 Connect", parent)
-    btn_connect.setStyleSheet("font-size: 14px; color: white;")
+    btn_connect = QPushButton("🔌 Connect")
+    btn_connect.setStyleSheet(BUTTON_STYLE)
     btn_connect.clicked.connect(lambda: connect_callback("important"))
 
-    btn_dummy = QPushButton("🛠 Dummy-Simulation", parent)
-    btn_dummy.setStyleSheet("font-size: 14px; color: white;")
+    btn_dummy = QPushButton("🛠 Dummy-Simulation")
+    btn_dummy.setStyleSheet(BUTTON_STYLE)
     btn_dummy.clicked.connect(lambda: dummy_callback("dummy"))
 
     layout.addWidget(btn_connect)

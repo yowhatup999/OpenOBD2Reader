@@ -8,6 +8,7 @@ from PySide6.QtCore import QTimer, Qt
 
 from gui.GlowingAnimatedFrame import GlowingAnimatedFrame
 from gui.GlowingFrame import GlowingFrame
+from gui.glow_window_border import GlowingWindowFrame
 from gui.obd_ui import create_status_frame, create_buttons_frame, create_log_console
 from gui.obd_styles import STYLE_MAIN
 from gui.obd_animations import *
@@ -25,6 +26,11 @@ class ObdConsole(QWidget):
         self.setWindowTitle("OBD2 Terminal")
         self.resize(1280, 800)
         self.setStyleSheet(STYLE_MAIN)
+
+        ### Hintergrundrahmen mit animiertem Glow (wie Apple Intelligence)
+        # self.glowFrame = GlowingWindowFrame(self)
+        # self.glowFrame.setGeometry(self.rect())
+        # self.glowFrame.lower()
 
         # Setze das Fenster-Icon
         app.setWindowIcon(QIcon(":/icons/mainIcon.png"))
@@ -226,6 +232,11 @@ class ObdConsole(QWidget):
         self.obdManager.stop_worker()
         self.logger.log_info("Programm beendet")
         event.accept()
+
+    def resizeEvent(self, event):
+        # self.glowFrame.setGeometry(self.rect())
+        # super().resizeEvent(event)
+        pass
 
 
 if __name__ == "__main__":
